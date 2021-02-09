@@ -1,23 +1,23 @@
 import requests
 from bs4 import BeautifulSoup
 
+#variables
 site='https://www.skrivunder.net/signatures.php?tunnus=erkla&page_number=%PAGE%&num_rows=500'
+filename='output.html'
 allTables=''
 
+#fetch first page from site above - look at url %PAGE% is replaced with 1
 r = requests.get(site.replace('%PAGE%','1'))
 soup = BeautifulSoup(r.text, 'html.parser')
+lastPage = soup.find('ul', {'class': 'pagination'}).find_all('li')[-2].find('a').string
+#store the table header for writing new header in table in output file
 thead = soup.find("table", id="signatures").find('thead')
-pages = soup.find('ul', {'class': 'pagination'})
-soup = BeautifulSoup(str(pages), 'html.parser')
-lastPage = soup.find_all('li')[-2].find('a').string
-
-# the code above could have been used to fetch page one - but still we'll iterate from page one to lastpage
-
-for x in range(1, int(lastPage)+1):
+# the code fetches page 1 - but still we'll iterate from page one to lastpage
+for pageNr in range(1, int(lastPage)+1):
     #print the counting of every page fetched
-    print(x)
+    print(pageNr)
     #replace page with counter x
-    r = requests.get(site.replace('%PAGE%',str(x)))
+    r = requests.get(site.replace('%PAGE%',str(pageNr)))
     #the following lines not needed for this ... but kept for other purposes
     headers = r.headers
     contentType = r.headers['content-type']
@@ -33,7 +33,7 @@ for x in range(1, int(lastPage)+1):
     #just the rows (and columns)
     allTables=allTables+str(tableWithSignatures)
 #put everything into file
-with open("output.html", "w", encoding='utf-8') as file:
+with open(filename, "w", encoding='utf-8') as file:
     #rewrite the table tag and thead and tbody tags
     file.write('<table>'+str(thead)+'<tbody>')
     file.write(allTables)
